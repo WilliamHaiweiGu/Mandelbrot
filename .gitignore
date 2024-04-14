@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+.vscode/
+dat_to_png
+run_cpu
+run_gpu

@@ -1,7 +1,8 @@
-// g++ -O3 -o mandelbrot mandelbrot0.cpp -lgmpxx -lgmp -fopenmp `pkg-config --cflags --libs opencv4`
+// g++ -O3 -o run_cpu run_cpu.cpp -lgmpxx -lgmp -fopenmp `pkg-config --cflags --libs opencv4`
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <omp.h>
+#include <chrono>
 
 using namespace std;
 constexpr int IMG_SIZE = 65536;
@@ -25,11 +26,13 @@ int run_iter(const double x0, const double y0)
     }
     return 0;
 }
+
 int main()
 {
     const int size_half = IMG_SIZE / 2;
     const double zoom_lv = 2.0 / size_half;
     cv::Mat image = cv::Mat::ones(IMG_SIZE, IMG_SIZE, CV_8UC1) * 255;
+    auto start = chrono::high_resolution_clock::now();
     int i, j;
     #pragma omp parallel for private(i, j)
     for (i = 0; i <= size_half; i++)
@@ -42,6 +45,9 @@ int main()
             if (i > 0 && i < size_half)
                 image.at<uchar>(IMG_SIZE - i, j) = ans;
         }
+    auto stop = chrono::high_resolution_clock::now();
+    cout << "CPU Time: " << chrono::duration_cast<chrono::microseconds>(stop - start).count() / 1e6 << " seconds" << endl;
+
     int i_min = IMG_SIZE;
     int i_max = 0;
     int j_min = IMG_SIZE;
@@ -56,6 +62,6 @@ int main()
                 j_max = max(j, j_max);
             }
     image = image(cv::Rect(j_min, i_min, j_max + 1 - j_min, i_max + 1 - i_min));
-    cv::imwrite("out.png", image);
+    cv::imwrite("out_cpu.png", image);
     return 0;
 }
